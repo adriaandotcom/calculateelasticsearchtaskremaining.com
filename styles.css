@@ -1,7 +1,7 @@
 body {
   background-color: #f3f4f6;
   color: #1f2937;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
   padding: 20px;
 }
@@ -16,22 +16,25 @@ h1 {
   color: #2563eb;
 }
 
-.instructions, .result-container {
+.instructions,
+.result-container {
   background-color: #ffffff;
   padding: 20px;
   border-radius: 8px;
   margin-top: 20px;
 }
 
-.instructions h2, .result-container h2 {
+.instructions h2,
+.result-container h2 {
   margin-top: 0;
 }
 
 textarea {
-  width: 100%;
+  margin-top: 10px;
+  width: calc(100% - 20px);
   height: 200px;
   padding: 10px;
-  font-size: 16px;
+  font-size: 14px;
   border-radius: 4px;
   border: 1px solid #d1d5db;
 }

@@ -1,13 +1,35 @@
+const sanitizeJsonInput = (input) => {
+  // Remove triple double quotes
+  input = input.replace(/"""/g, '"');
+
+  // Remove comments and handle multiline strings by stripping newlines
+  input = input.replace(/\/\/.*$/gm, ""); // Remove single-line comments
+  input = input.replace(/\n/g, " "); // Replace newlines with a space
+
+  return input;
+};
+
 const calculateTimeRemaining = () => {
-  const jsonInput = document.getElementById('json-input').value;
-  const resultElement = document.getElementById('result');
+  const jsonInput = document.getElementById("json-input").value;
+  const sanitizedInput = sanitizeJsonInput(jsonInput);
+  const resultElement = document.getElementById("result");
 
   try {
-    const data = JSON.parse(jsonInput);
+    let data;
+
+    try {
+      data = JSON.parse(sanitizedInput);
+    } catch (error) {
+      console.error(error);
+      resultElement.textContent =
+        "Invalid JSON input. Please check your format.";
+      return;
+    }
+
     const { completed, task } = data;
 
     if (completed) {
-      resultElement.textContent = 'Task is already completed.';
+      resultElement.textContent = "Task is already completed.";
       return;
     }
 
@@ -18,7 +40,8 @@ const calculateTimeRemaining = () => {
     const processed = created + updated + deleted;
 
     if (total === 0 || processed === 0) {
-      resultElement.textContent = 'Insufficient data to calculate remaining time.';
+      resultElement.textContent =
+        "Insufficient data to calculate remaining time.";
       return;
     }
 
@@ -42,10 +65,11 @@ const calculateTimeRemaining = () => {
     const minutes = Math.floor((remainingSeconds % 3600) / 60);
     const seconds = remainingSeconds % 60;
 
-    let remainingTimeString = 'Estimated remaining time: ';
+    let remainingTimeString = "Estimated remaining time: ";
     if (days > 0) remainingTimeString += `${days}d `;
     if (hours > 0 || days > 0) remainingTimeString += `${hours}h `;
-    if (minutes > 0 || hours > 0 || days > 0) remainingTimeString += `${minutes}m `;
+    if (minutes > 0 || hours > 0 || days > 0)
+      remainingTimeString += `${minutes}m `;
     remainingTimeString += `${seconds}s`;
 
     const endTimeString = `Estimated end time: ${estimatedEndTime.toLocaleString()}`;
@@ -53,8 +77,10 @@ const calculateTimeRemaining = () => {
     resultElement.textContent = `${remainingTimeString}\n${endTimeString}`;
   } catch (error) {
     console.error(error);
-    resultElement.textContent = 'Invalid JSON input. Please check your format.';
+    resultElement.textContent = error.message;
   }
 };
 
-document.getElementById('calculate-button').addEventListener('click', calculateTimeRemaining);
+document
+  .getElementById("calculate-button")
+  .addEventListener("click", calculateTimeRemaining);
