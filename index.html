@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Time Remaining Calculator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Time Remaining Calculator</h1>
+    <div class="instructions">
+      <h2>Instructions</h2>
+      <p>Paste your JSON input in the field below. The JSON should have a structure similar to the example:</p>
+      <pre>
+        {`{
+  "completed": false,
+  "task": {
+    "status": {
+      "total": 100000,
+      "created": 20000,
+      "updated": 15000,
+      "deleted": 5000
+    },
+    "running_time_in_nanos": 1200000000000
+  }
+}`}
+      </pre>
+    </div>
+
+    <textarea id="json-input" placeholder='Paste your JSON here'></textarea>
+
+    <button id="calculate-button">Calculate Time Remaining</button>
+
+    <div class="result-container">
+      <h2>Result</h2>
+      <pre id="result">Your result will appear here.</pre>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
