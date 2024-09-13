@@ -89,6 +89,29 @@ const formatEndTime = (estimatedEndTimeMillis) => {
   return `Estimated end time: ${estimatedEndTime.toLocaleString()}`;
 };
 
+const updateFavicon = (progress) => {
+  const dashoffset = 100 - progress;
+
+  const waiting = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="#871ea1" d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm1 12v-6h-2v8h7v-2h-5z"/></svg>`;
+
+  const finishedSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="#871ea1" d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm4.393 7.5l-5.643 5.784-2.644-2.506-1.856 1.858 4.5 4.364 7.5-7.643-1.857-1.857z"/></svg>`;
+
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'>
+        <circle cx='18' cy='18' r='15.91549431' fill='none' stroke='#eccdf3' stroke-width='4'/>
+        <circle cx='18' cy='18' r='15.91549431' fill='none' stroke='#871ea1' stroke-width='4' stroke-dasharray='100' stroke-dashoffset='${dashoffset}' transform='rotate(-90 18 18)'/>
+        <text x='18' y='22' font-size='14' text-anchor='middle' fill='#333' font-family='Arial'>${progress}</text>
+      </svg>`;
+
+  const useSvg =
+    progress === -1 ? waiting : progress >= 100 ? finishedSvg : svg;
+
+  const encodedSvg = encodeURIComponent(useSvg);
+  const favicon = document.querySelector("link[rel='icon']");
+  favicon.setAttribute("href", `data:image/svg+xml,${encodedSvg}`);
+};
+
+updateFavicon(-1);
+
 const updateResult = (resultElement, progressData, taskData) => {
   const { estimatedRemainingTimeMillis, currentTime, estimatedProcessed } =
     progressData;
@@ -103,6 +126,8 @@ const updateResult = (resultElement, progressData, taskData) => {
 
   // Update document title
   document.title = `${estimatedProgressPercentage.toFixed(0)}% ${task_id}`;
+
+  updateFavicon(estimatedProgressPercentage.toFixed(0));
 
   resultElement.textContent = `${remainingTimeString}\n${endTimeString}\nActual progress: ${processed} / ${total} (${(
     (processed / total) *
