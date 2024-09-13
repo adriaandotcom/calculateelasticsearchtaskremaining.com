@@ -3,17 +3,44 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Calculate the remaining time for Elasticsearch tasks with our Elastic Task Remaining Calculator."
+    />
+    <meta
+      name="keywords"
+      content="Elasticsearch, task calculator, time remaining, elastic search"
+    />
+    <meta name="author" content="Elastic Task Remaining Calculator" />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:title" content="Elastic Task Remaining Calculator" />
+    <meta
+      property="og:description"
+      content="Calculate the remaining time for Elasticsearch tasks easily."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.elastictaskremaining.com" />
     <title>Elastic Task Remaining Calculator</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <div class="container">
-      <h1>Elastic task remaining .com</h1>
+      <h1>Elastic task remaining</h1>
       <div class="instructions">
-        <h2>Instructions</h2>
         <p>
-          Paste your JSON input in the field below. The JSON should have a
-          structure similar to the example:
+          When running time consuming tasks in Elasticsearch, you want to know
+          the time remaining. Elasticsearch does not show a human readable time
+          when it expects to finish. This tool helps you calculate the time left
+          for your Elasticsearch task to complete. It uses the task's
+          <code>completed</code> field and <code>start_time_in_millis</code> and
+          <code>running_time_in_nanos</code> fields to calculate the time
+          remaining. Nothing is stored or sent to a server. Everything is
+          calculated in your browser.
+        </p>
+        <p>
+          Paste your JSON input from
+          <code>GET /_tasks/BfedGhlURtucl1thbdhE3f:8472930</code> in the field
+          below. The JSON should have a structure similar to the example:
         </p>
         <pre>
 &#123;
@@ -38,6 +65,6 @@
       </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="/script.js"></script>
   </body>
 </html>
