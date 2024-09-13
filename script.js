@@ -21,10 +21,16 @@ const extractTaskData = ({ completed, task }) => {
     throw new Error("Task is already completed.");
   }
   const { status, start_time_in_millis, running_time_in_nanos, id } = task;
-  const { total, created = 0, updated = 0, deleted = 0 } = status;
+  const {
+    total,
+    created = 0,
+    updated = 0,
+    deleted = 0,
+    version_conflicts = 0,
+  } = status;
   return {
     total,
-    processed: created + updated + deleted,
+    processed: created + updated + deleted + version_conflicts,
     start_time_in_millis,
     running_time_in_nanos,
     task_id: id,
