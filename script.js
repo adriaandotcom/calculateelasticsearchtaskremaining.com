@@ -34,6 +34,7 @@ const extractTaskData = ({ completed, task }) => {
     start_time_in_millis,
     running_time_in_nanos,
     task_id: id,
+    description: task.description,
   };
 };
 
@@ -115,7 +116,7 @@ updateFavicon(-1);
 const updateResult = (resultElement, progressData, taskData) => {
   const { estimatedRemainingTimeMillis, currentTime, estimatedProcessed } =
     progressData;
-  const { total, processed, task_id } = taskData;
+  const { total, processed, task_id, description } = taskData;
 
   const remainingTimeString = formatRemainingTime(estimatedRemainingTimeMillis);
   const estimatedEndTimeMillis = currentTime + estimatedRemainingTimeMillis;
@@ -125,7 +126,9 @@ const updateResult = (resultElement, progressData, taskData) => {
   if (estimatedProgressPercentage > 100) estimatedProgressPercentage = 100;
 
   // Update document title
-  document.title = `${estimatedProgressPercentage.toFixed(0)}% ${task_id}`;
+  document.title = `${estimatedProgressPercentage.toFixed(0)}% ${
+    description || task_id
+  }`;
 
   updateFavicon(estimatedProgressPercentage.toFixed(0));
 
