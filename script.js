@@ -1,3 +1,58 @@
+/**
+ * @typedef {Object} TaskStatus
+ * @property {number} total
+ * @property {number} updated
+ * @property {number} created
+ * @property {number} deleted
+ * @property {number} version_conflicts
+ * @property {number} [slice_id]
+ * @property {Array} [slices]
+ */
+
+/**
+ * @typedef {Object} Task
+ * @property {string} node
+ * @property {number} id
+ * @property {string} action
+ * @property {TaskStatus} status
+ * @property {string} description
+ * @property {number} start_time_in_millis
+ * @property {number} running_time_in_nanos
+ * @property {string} [parent_task_id]
+ */
+
+/**
+ * @typedef {Object} Node
+ * @property {Object.<string, Task>} tasks
+ */
+
+/**
+ * @typedef {Object} SlicedTask
+ * @property {Object.<string, Node>} nodes
+ */
+
+/**
+ * @typedef {Object} OneTask
+ * @property {boolean} completed
+ * @property {Task} task
+ */
+
+const filterPath = [
+  "**.node",
+  "**.id",
+  "**.action",
+  "**.total",
+  "**.updated",
+  "**.created",
+  "**.deleted",
+  "**.version_conflicts",
+  "**.slice_id",
+  "**.description",
+  "**.start_time_in_millis",
+  "**.running_time_in_nanos",
+  "**.parent_task_id",
+];
+
 let intervalId;
 
 const sanitizeJsonInput = (input) => {
@@ -7,6 +62,10 @@ const sanitizeJsonInput = (input) => {
   return input;
 };
 
+/**
+ * @param {string} sanitizedInput
+ * @returns {OneTask | SlicedTask}
+ */
 const parseJsonInput = (sanitizedInput) => {
   try {
     return JSON.parse(sanitizedInput);
@@ -16,11 +75,27 @@ const parseJsonInput = (sanitizedInput) => {
   }
 };
 
-const extractTaskData = ({ completed, task }) => {
-  if (completed) {
-    throw new Error("Task is already completed.");
+/**
+ * @param {OneTask | SlicedTask} taskData
+ * @returns {Object}
+ */
+const extractTaskData = (taskData) => {
+  if ("completed" in taskData) {
+    return extractOneTaskData(taskData);
+  } else {
+    return extractSlicedTaskData(taskData);
   }
-  const { status, start_time_in_millis, running_time_in_nanos, id } = task;
+};
+
+/**
+ * @param {OneTask} taskData
+ * @returns {Object}
+ */
+const extractOneTaskData = ({ completed, task }) => {
+  if (completed) throw new Error("Task is already completed.");
+
+  const { status, start_time_in_millis, running_time_in_nanos, id, node } =
+    task;
   const {
     total,
     created = 0,
@@ -28,19 +103,88 @@ const extractTaskData = ({ completed, task }) => {
     deleted = 0,
     version_conflicts = 0,
   } = status;
+
   return {
     total,
     processed: created + updated + deleted + version_conflicts,
     start_time_in_millis,
     running_time_in_nanos,
-    task_id: id,
+    task_id: `${node}:${id}`,
     description: task.description,
+    slices: status.slices,
+  };
+};
+
+/**
+ * @param {SlicedTask} taskData
+ * @returns {Object}
+ */
+const extractSlicedTaskData = ({ nodes }) => {
+  let total = 0;
+  let processed = 0;
+  let start_time_in_millis = Infinity;
+  let running_time_in_nanos = 0;
+  let task_id = "";
+  let description = "";
+  let slices = [];
+
+  Object.values(nodes).forEach((node) => {
+    Object.values(node.tasks).forEach((task) => {
+      const {
+        status,
+        start_time_in_millis: taskStart,
+        running_time_in_nanos: taskRunning,
+        parent_task_id,
+        node,
+        id,
+      } = task;
+
+      const {
+        total: taskTotal,
+        created = 0,
+        updated = 0,
+        deleted = 0,
+        version_conflicts = 0,
+      } = status;
+
+      total += taskTotal;
+      processed += created + updated + deleted + version_conflicts;
+      start_time_in_millis = Math.min(start_time_in_millis, taskStart);
+      running_time_in_nanos = Math.max(running_time_in_nanos, taskRunning);
+      task_id = task_id || parent_task_id || `${node}:${id}`;
+      description = description || task.description;
+      slices = slices.concat(status.slices || []);
+    });
+  });
+
+  return {
+    total,
+    processed,
+    start_time_in_millis,
+    running_time_in_nanos,
+    task_id,
+    description,
+    slices,
   };
 };
 
 const calculateProgress = (data, currentTime) => {
-  const { total, processed, start_time_in_millis, running_time_in_nanos } =
-    data;
+  const {
+    total,
+    processed,
+    start_time_in_millis,
+    running_time_in_nanos,
+    slices,
+    task_id,
+  } = data;
+
+  if (slices?.length > 0 && slices.every((slice) => slice === null)) {
+    throw new Error(
+      `Task is sliced but no slice data is available.\nPlease paste the response of this request:\n\nGET /_tasks?detailed&parent_task_id=${task_id}&filter_path=${filterPath.join(
+        ","
+      )}`
+    );
+  }
 
   if (total === 0 || processed === 0) {
     throw new Error("Insufficient data to calculate remaining time.");
@@ -125,12 +269,15 @@ const updateResult = (resultElement, progressData, taskData) => {
   let estimatedProgressPercentage = (estimatedProcessed / total) * 100;
   if (estimatedProgressPercentage > 100) estimatedProgressPercentage = 100;
 
-  // Update document title
-  document.title = `${estimatedProgressPercentage.toFixed(0)}% ${
-    description || task_id
-  }`;
+  const flooredProgress =
+    estimatedProgressPercentage < 10
+      ? (Math.floor(estimatedProgressPercentage * 10) / 10).toFixed(1)
+      : Math.floor(estimatedProgressPercentage).toFixed(0);
 
-  updateFavicon(estimatedProgressPercentage.toFixed(0));
+  updateFavicon(flooredProgress);
+
+  // Update document title
+  document.title = `${flooredProgress}% ${description || task_id}`;
 
   resultElement.textContent = `${remainingTimeString}\n${endTimeString}\nActual progress: ${processed} / ${total} (${(
     (processed / total) *
@@ -147,6 +294,7 @@ const calculateTimeRemaining = () => {
   }
 
   const jsonInput = document.getElementById("json-input").value;
+
   const sanitizedInput = sanitizeJsonInput(jsonInput);
   const resultElement = document.getElementById("result");
 
@@ -180,7 +328,7 @@ const calculateTimeRemaining = () => {
 
     window.addEventListener("unload", () => clearInterval(intervalId));
   } catch (error) {
-    console.error("Calculation error", JSON.stringify(error, null, 2));
+    console.error("Calculation error", error);
     resultElement.textContent = error.message;
   }
 };

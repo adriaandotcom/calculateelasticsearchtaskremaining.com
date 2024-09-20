@@ -74,9 +74,10 @@ button:hover {
   background-color: var(--primary-color-active);
 }
 
-.result {
-  font-size: 18px;
-  white-space: pre-wrap;
+#result {
+  font-size: 16px;
+  word-break: break-all;
+  white-space: break-spaces;
 }
 
 footer {
